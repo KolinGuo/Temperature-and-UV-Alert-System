@@ -1,0 +1,207 @@
+// Processing Unit #1
+// Author: Kolin Guo, Andrew Ho, Hayaan Nishad Azeem, Bobby Leanio
+
+#include <SPI.h>
+#include <LiquidCrystal.h>
+#include "nRF24L01.h"
+#include "RF24.h"
+
+int detectInterval = 1 * 1000;
+double tmp[4], UVIdx[4];
+boolean isDetected[] = {false, false, false, false};
+char buf[10];
+String str = "";
+
+// Hardware configuration of nRF24L01: CE to pin 8, CSN to pin 7
+RF24 radio(8, 7);
+const uint64_t addresses[] = {0xB3B4B5B6AALL, 0xB3B4B5B6BBLL, 0xB3B4B5B6CCLL, 0xB3B4B5B6DDLL};
+
+// Set Up LCD Panel
+LiquidCrystal lcd(6, 9, 2, 3, 4, 5);  // RS, EN, D4, D5, D6, D7
+
+void setup() {
+  Serial.begin(9600);
+
+  setUpRadio();
+  setUpLCD();
+  delay(100);
+}
+
+void loop() {
+  readKeys();
+  readRadio();
+  sendData();
+  updateLCD();
+  delay(detectInterval);
+}
+
+void setUpRadio()
+{
+  // Setup and configure rf radio
+  radio.begin();                          // Start up the radio
+  radio.setAutoAck(1);                    // Ensure autoACK is enabled
+  radio.setRetries(15,15);                // Max delay between retries & number of retries
+  radio.setPALevel( RF24_PA_MAX ) ;       // Max power 
+  radio.setDataRate( RF24_250KBPS ) ;     // Min speed (for better range I presume)
+  radio.setCRCLength( RF24_CRC_8 ) ;      // 8 bits CRC
+  radio.openReadingPipe(0,addresses[0]);  // Open Pipe AA for reading
+  radio.openReadingPipe(1,addresses[1]);  // Open Pipe BB for reading
+  radio.openReadingPipe(2,addresses[2]);  // Open Pipe CC for reading
+  radio.openReadingPipe(3,addresses[3]);  // Open Pipe DD for reading
+
+  radio.startListening();                 // Start listening
+//  radio.printDetails();                   // Dump the configuration of the rf unit for debugging
+}
+
+void setUpLCD()
+{
+  // Setup and configure LCD Panel
+  lcd.begin(16, 2);
+  lcd.print("Temperature & UV");
+  lcd.setCursor(0, 1);  // column, row
+  lcd.print("  Alert System");
+  delay(3000);
+}
+
+void readKeys()
+{
+  // Read keys from Unit 2
+  if(Serial.available())
+  {
+    while(Serial.peek() == '/')
+    {
+      Serial.readBytesUntil('\n', buf, sizeof(buf));
+      str = buf;
+      Serial.println(str.length());
+    }
+    
+  }
+}
+
+
+void readRadio()
+{
+  // Read data from nRF24L01
+  byte pipeNum = 0;                       // which pipe is sending data
+  
+  
+
+  while(radio.available(&pipeNum))
+  {
+    for(int i = 0; i < 4; i++)              // Reset indicators
+      isDetected[i] = false;
+    
+    isDetected[pipeNum] = true;
+    radio.read(tmp+pipeNum, sizeof(double));
+    radio.read(UVIdx+pipeNum, sizeof(double));
+/*  
+    printf("Temperature: ");
+    Serial.print(tmp);
+    printf(" degree.\n\r");
+    printf("UV Index: ");
+    Serial.println(UVIdx);
+*/
+  }
+}
+
+void sendData()
+{
+  // Send data to Unit 2
+  for(int i = 0; i < 4; i++)
+    printBool(isDetected[i]);
+  Serial.println();
+  for(int i = 0; i < 4; i++)
+    if(isDetected[i])
+    {
+      Serial.println(tmp[i]);
+      Serial.println(UVIdx[i]);
+    }
+}
+
+void printBool(boolean b)
+{
+  /* Print a boolean
+   *  @b: the boolean that needs to be printed
+   */
+  if(b)
+    Serial.write("T");
+  else
+    Serial.write("F");
+}
+
+void updateLCD()
+{
+  // Update the LCD Panel
+  lcd.clear();
+  
+  for(int i = 0; i < 4; i++)
+  {
+    switch(i)
+    {
+      case 0:
+        lcd.setCursor(0, 0);
+        break;
+      case 1:
+        lcd.setCursor(8, 0);
+        break;
+      case 2:
+        lcd.setCursor(0, 1);
+        break;
+      case 3:
+        lcd.setCursor(8, 1);
+        break;
+    }
+    
+    lcd.print((char)('A' + i));
+    
+    if(isDetected[i])
+    {
+      printTemp(tmp[i]);
+      lcd.print(",");
+      printUVIdx(UVIdx[i]);
+    }
+    else
+      lcd.print(" NC");
+  }
+/*
+  lcd.setCursor(8, 0);
+  lcd.print("A ");
+  
+  if(isDetected[0])
+  {
+    lcd.print(tmp[0], 0);
+    lcd.print(",");
+    lcd.print(UVIdx[0], 1);
+  }
+*/
+}
+
+void printTemp(double temp)
+{
+  /* Print out temperature
+   *  @temp: the temperature that needs to be printed
+   */
+  if(temp < -40 || temp > 125)    // Temperature Range of TMP36GZ
+    lcd.print(" ND");
+  else if(temp < 0 || temp > 100)
+    lcd.print(temp, 0);
+  else
+  {
+    lcd.print(" ");
+    lcd.print(temp, 0);
+  }
+}
+
+void printUVIdx(double UVIdx)
+{
+  /* Print out UV Index
+   *  @UVIdx: the UV Index that needs to be printed
+   */
+  if(UVIdx < 0 || UVIdx > 15)     // Normal UV Index Range
+    lcd.print("ND");
+  else if(UVIdx > 10)
+    lcd.print(UVIdx, 0);
+  else
+    lcd.print(UVIdx, 1);
+}
+
