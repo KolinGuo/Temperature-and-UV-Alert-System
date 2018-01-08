@@ -14,13 +14,13 @@ Our project is designed to prevent sunburn of crops by monitoring temperature an
 ## Design Overview
 In our design, there are two separate units: the detector unit and the processing unit. 
   * The detector unit serves to collect the sensor values, convert them into comprehensible version, and transmit them to the processing unit.  
-    It consists of a **_Arduino Uno_**, a radio module, a temperature sensor, and a UV sensor. 
+    It consists of an **_Arduino Uno_**, a radio module, a temperature sensor, and a UV sensor. 
 
   * The processing unit receives data from the detector unit, displays the values on the LCD panel and alerts farmers using the LEDs. Also, farmers can use the 4x4 keypad to change the alert threshold of a particular crop.  
-    It consists of two **_Arduino Unos_**, a radio module, an LCD panel, a 4x4 keypad, and four LEDs. 
+    It consists of two **_Arduino Unos_** connected in _Serial_, a radio module, an LCD panel, a 4x4 keypad, and four LEDs. 
 
 ## Features: 
-  * Support up to 4 different crops (1 detector unit for a particular crop)
+  * Support up to 4 different crops (one detector unit for a particular crop)
   * Wireless transmission up to 1 km
   * Waterproofed units
   * Easy to change threshold value
