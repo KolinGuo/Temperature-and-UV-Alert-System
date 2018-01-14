@@ -19,6 +19,25 @@ In our design, there are two separate units: the **detector unit** and the **pro
   * The **processing unit** receives data from the detector unit, displays the values on the LCD panel and alerts farmers using the LEDs. Also, farmers can use the 4x4 keypad to change the alert threshold of a particular crop.  
     It consists of two **_Arduino Unos_** connected in _Serial_, a radio module, an LCD panel, a 4x4 keypad, and four LEDs. 
 
+## Photos
+Detector Unit: 
+![](/images/photos/DetectorUnit2.jpg "Detector Unit")
+
+Detector Unit Case with Antenna:  
+![](/images/photos/DetectorUnitCasewithAntenna.jpg "Detector Unit Case with Antenna")
+
+Processing Unit:
+![](/images/photos/ProcessingUnit.jpg "Processing Unit")
+
+Processing Unit (LEDs & Antenna): 
+![](/images/photos/ProcessingUnit(LEDs&Antenna).jpg "Processing Unit (LEDs & Antenna)")
+
+Processing Unit (LCD & Keypad): 
+![](/images/photos/ProcessingUnit(LCD&Keypad).jpg "Processing Unit (LCD & Keypad)")
+
+
+
+
 ## Features: 
   * Support up to 4 different crops (one detector unit for a particular crop)
   * Wireless transmission up to 1 km
